@@ -1,0 +1,76 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+      - '.github/workflows/**'
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  validate-infra:
+    name: Validate Infrastructure
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: infra/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: infra
+        run: npm ci
+      
+      - name: Type check
+        working-directory: infra
+        run: npm run typecheck
+      
+      - name: Lint
+        working-directory: infra
+        run: npm run lint
+      
+      - name: Check formatting
+        working-directory: infra
+        run: |
+          npx prettier --check "**/*.{ts,js,json,yml,yaml,md}"
+        continue-on-error: true
+      
+      - name: Validate SST config
+        working-directory: infra
+        run: npm run types
+        continue-on-error: true
+      
+      - name: Comment on PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ All infrastructure checks passed!'
+            })
+      
+      - name: Comment on PR failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '❌ Infrastructure checks failed. Please review the errors above.'
+            })
+

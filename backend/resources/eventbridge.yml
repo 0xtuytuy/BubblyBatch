@@ -1,0 +1,80 @@
+Resources:
+  EventBridgeSchedulerGroup:
+    Type: AWS::Scheduler::ScheduleGroup
+    Properties:
+      Name: ${self:custom.schedulerGroupName}
+      Tags:
+        - Key: Service
+          Value: kefir-backend
+        - Key: Stage
+          Value: ${self:provider.stage}
+
+  # Placeholder Lambda for reminder notifications
+  # This will be triggered by EventBridge schedules
+  ReminderNotificationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: kefir-reminder-notification-${self:provider.stage}
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt ReminderNotificationLambdaRole.Arn
+      Environment:
+        Variables:
+          TABLE_NAME: ${self:custom.tableName}
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            console.log('Reminder triggered:', JSON.stringify(event));
+            // TODO: Implement push notification logic
+            // This will send notifications to registered devices
+            return { statusCode: 200 };
+          };
+
+  ReminderNotificationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !GetAtt KefirTable.Arn
+                  - !Sub '${KefirTable.Arn}/index/*'
+
+  # IAM role for EventBridge Scheduler to invoke Lambda
+  EventBridgeSchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kefir-scheduler-role-${self:provider.stage}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeLambda
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt ReminderNotificationLambda.Arn
+

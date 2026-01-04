@@ -1,0 +1,202 @@
+service: kefir-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 30
+  environment:
+    TABLE_NAME: ${self:custom.tableName}
+    BUCKET_NAME: ${self:custom.bucketName}
+    USER_POOL_ID: !Ref CognitoUserPool
+    USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+    SCHEDULER_GROUP_NAME: ${self:custom.schedulerGroupName}
+    STAGE: ${self:provider.stage}
+  iam:
+    role:
+      statements:
+        # DynamoDB permissions
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:BatchGetItem
+            - dynamodb:BatchWriteItem
+          Resource:
+            - !GetAtt KefirTable.Arn
+            - !Sub '${KefirTable.Arn}/index/*'
+        # S3 permissions
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+          Resource:
+            - !Sub '${PhotosBucket.Arn}/*'
+        # EventBridge Scheduler permissions
+        - Effect: Allow
+          Action:
+            - scheduler:CreateSchedule
+            - scheduler:GetSchedule
+            - scheduler:UpdateSchedule
+            - scheduler:DeleteSchedule
+            - scheduler:ListSchedules
+          Resource:
+            - !Sub 'arn:aws:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/${self:custom.schedulerGroupName}/*'
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+custom:
+  tableName: kefir-table-${self:provider.stage}
+  bucketName: kefir-photos-${self:provider.stage}-${aws:accountId}
+  schedulerGroupName: kefir-reminders-${self:provider.stage}
+  
+  serverless-offline:
+    httpPort: 3000
+    lambdaPort: 3002
+
+functions:
+  # Batch management functions
+  batch:
+    handler: src/functions/batch/handler.main
+    events:
+      - httpApi:
+          path: /batches
+          method: POST
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+      - httpApi:
+          path: /batches
+          method: GET
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+      - httpApi:
+          path: /batches/{id}
+          method: GET
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+
+  # Batch event functions
+  event:
+    handler: src/functions/event/handler.main
+    events:
+      - httpApi:
+          path: /batches/{id}/events
+          method: POST
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+      - httpApi:
+          path: /batches/{id}/events
+          method: GET
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+
+  # Reminder functions
+  reminder:
+    handler: src/functions/reminder/handler.main
+    events:
+      - httpApi:
+          path: /batches/{id}/reminders/suggestions
+          method: GET
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+      - httpApi:
+          path: /batches/{id}/reminders/confirm
+          method: POST
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+      - httpApi:
+          path: /me/reminders
+          method: GET
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+
+  # User/Device functions
+  user:
+    handler: src/functions/user/handler.main
+    events:
+      - httpApi:
+          path: /me/devices
+          method: POST
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+
+  # Export function
+  export:
+    handler: src/functions/export/handler.main
+    timeout: 60  # CSV generation might take longer
+    events:
+      - httpApi:
+          path: /export.csv
+          method: GET
+          authorizer:
+            type: jwt
+            id: !Ref HttpApiAuthorizer
+
+  # Public batch view (no auth)
+  public:
+    handler: src/functions/public/handler.main
+    events:
+      - httpApi:
+          path: /public/b/{batchId}
+          method: GET
+
+resources:
+  - ${file(resources/dynamodb.yml)}
+  - ${file(resources/s3.yml)}
+  - ${file(resources/cognito.yml)}
+  - ${file(resources/eventbridge.yml)}
+  - ${file(resources/api-gateway.yml)}
+
+  - Resources:
+      # Additional outputs for easy reference
+      GatewayResponseDefault4XX:
+        Type: AWS::ApiGatewayV2::GatewayResponse
+        Properties:
+          ResponseParameters:
+            gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+            gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          ResponseType: DEFAULT_4XX
+          RestApiId:
+            Ref: HttpApi
+
+  Outputs:
+    ApiUrl:
+      Description: API Gateway endpoint URL
+      Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+    
+    UserPoolId:
+      Description: Cognito User Pool ID
+      Value: !Ref CognitoUserPool
+    
+    UserPoolClientId:
+      Description: Cognito User Pool Client ID
+      Value: !Ref CognitoUserPoolClient
+    
+    TableName:
+      Description: DynamoDB table name
+      Value: !Ref KefirTable
+    
+    BucketName:
+      Description: S3 bucket name
+      Value: !Ref PhotosBucket
+
