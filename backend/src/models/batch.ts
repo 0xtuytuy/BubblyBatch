@@ -34,7 +34,7 @@ export const BatchSchema = z.object({
   sugarAmount: z.number().optional(), // grams
   notes: z.string().optional(),
   photoKeys: z.array(z.string()).optional(),
-  isPublic: z.boolean().default(false),
+  isPublic: z.boolean(),
   publicNote: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -51,12 +51,9 @@ export const CreateBatchSchema = z.object({
   sugarType: z.string().max(50).optional(),
   sugarAmount: z.number().min(0).max(1000).optional(),
   notes: z.string().max(1000).optional(),
-  isPublic: z.boolean().default(false),
+  isPublic: z.boolean().optional(),
   publicNote: z.string().max(500).optional(),
-}).transform((data) => ({
-  ...data,
-  isPublic: data.isPublic ?? false, // Ensure isPublic is always boolean
-}));
+});
 
 export type CreateBatchInput = z.infer<typeof CreateBatchSchema>;
 

@@ -200,7 +200,7 @@ async function setup() {
     console.log("\nNext steps:");
     console.log("  1. Seed test data: tsx scripts/seed-dev.ts --local");
     console.log("  2. View tables at: http://localhost:8001");
-    console.log("  3. Start SST dev mode: npm run dev");
+    console.log("  3. Start local dev: npm run dev");
     
   } catch (error) {
     console.error("\n❌ Setup failed:", error);

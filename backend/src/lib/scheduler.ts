@@ -25,7 +25,6 @@ const getTargetLambdaArn = () => {
 const getSchedulerRoleArn = () => {
   const accountId = process.env.AWS_ACCOUNT_ID;
   const stage = process.env.STAGE || 'dev';
-  const region = process.env.AWS_REGION || 'us-east-1';
   return `arn:aws:iam::${accountId}:role/kefir-scheduler-role-${stage}`;
 };
 

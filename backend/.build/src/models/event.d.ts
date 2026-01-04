@@ -24,7 +24,7 @@ export declare const BatchEventSchema: z.ZodObject<{
     userId: string;
     createdAt: string;
     batchId: string;
-    type: "note" | "stage_change" | "observation" | "photo_added" | "status_change";
+    type: "stage_change" | "observation" | "photo_added" | "status_change" | "note";
     eventId: string;
     timestamp: string;
     metadata?: Record<string, any> | undefined;
@@ -36,7 +36,7 @@ export declare const BatchEventSchema: z.ZodObject<{
     userId: string;
     createdAt: string;
     batchId: string;
-    type: "note" | "stage_change" | "observation" | "photo_added" | "status_change";
+    type: "stage_change" | "observation" | "photo_added" | "status_change" | "note";
     eventId: string;
     timestamp: string;
     metadata?: Record<string, any> | undefined;
@@ -51,13 +51,13 @@ export declare const CreateEventSchema: z.ZodObject<{
     metadata: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodAny>>;
     photoKey: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    type: "note" | "stage_change" | "observation" | "photo_added" | "status_change";
+    type: "stage_change" | "observation" | "photo_added" | "status_change" | "note";
     description: string;
     metadata?: Record<string, any> | undefined;
     photoKey?: string | undefined;
     timestamp?: string | undefined;
 }, {
-    type: "note" | "stage_change" | "observation" | "photo_added" | "status_change";
+    type: "stage_change" | "observation" | "photo_added" | "status_change" | "note";
     description: string;
     metadata?: Record<string, any> | undefined;
     photoKey?: string | undefined;

@@ -1,103 +1,80 @@
 # Local Development
 
-This directory contains utilities for local development and testing.
+This directory contains utilities for local development.
 
-## Files
-
-- `mock-services.ts` - In-memory implementations of AWS services (DynamoDB, S3, EventBridge)
-- `test-data.ts` - Seed data for local testing
-
-## Usage
-
-### Running Locally with Serverless Offline
+## Quick Start
 
 ```bash
+# 1. Start Docker containers (DynamoDB Local)
+npm run local:docker
+
+# 2. Setup tables
+npm run local:setup
+
+# 3. Seed test data
+npm run local:seed
+
+# 4. Start local server
 npm run dev
 ```
 
-This will start the API locally on `http://localhost:3000` using Serverless Offline.
+## Available Scripts
 
-### Testing with Mock Data
+| Script | Description |
+|--------|-------------|
+| `npm run local:docker` | Start DynamoDB Local in Docker |
+| `npm run local:setup` | Create DynamoDB tables |
+| `npm run local:seed` | Seed test data to local DynamoDB |
+| `npm run local:clean` | Clear all data from local DynamoDB |
+| `npm run local:reset` | Reset tables (interactive prompt) |
+| `npm run dev` | Start Serverless Offline |
 
-The mock services provide in-memory storage for:
-- **DynamoDB**: All database operations
-- **S3**: Photo storage (returns mock presigned URLs)
-- **EventBridge Scheduler**: Reminder scheduling
+## Test Data
 
-### Seed Test Data
+After seeding, the following test data is available:
 
-When running locally, you can seed the database with test data:
+**Test User:**
+- Email: `test@example.com`
+- User ID: `test123`
 
-```typescript
-import { seedTestData } from './local/test-data';
+**Sample Batches:**
+- `batch001`: Summer Lemon Kefir (active)
+- `batch002`: Berry Blast (in fridge)
 
-seedTestData();
-```
+## Testing API Endpoints
 
-This creates:
-- 2 test users (alice@example.com, bob@example.com)
-- 3 test batches
-- Sample events for each batch
-- 1 test device
-
-### Testing API Endpoints
-
-With the local server running, you can test endpoints using curl or Postman:
+With the local server running, you can test endpoints using curl:
 
 ```bash
-# Health check (no auth required)
-curl http://localhost:3000/public/b/batch-1
+# List batches (requires X-User-Id header)
+curl -H "X-User-Id: test123" http://localhost:3000/batches
 
-# List batches (requires JWT token)
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  http://localhost:3000/batches
+# Get public batch (no auth)
+curl http://localhost:3000/public/b/batch001
 
 # Create a batch
 curl -X POST \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "X-User-Id: test123" \
   -H "Content-Type: application/json" \
-  -d '{"name":"Test Batch","stage":"stage1_open"}' \
+  -d '{"name":"Test Batch","stage":1}' \
   http://localhost:3000/batches
 ```
 
-### JWT Token for Local Testing
+## Admin Interfaces
 
-For local development, you'll need a valid JWT token from Cognito. You can:
+- **DynamoDB Admin UI**: http://localhost:8001
+- **API Endpoint**: http://localhost:3000
 
-1. Deploy only the Cognito stack to AWS
-2. Use the Cognito authentication flow to get a token
-3. Or temporarily bypass auth by modifying the handler to extract userId from a custom header
+## Environment Variables
 
-### Mock Service Utilities
-
-```typescript
-import { mockDynamoDB, mockS3, mockScheduler, clearAllMockStorage, getMockStorageStats } from './local/mock-services';
-
-// Clear all storage
-clearAllMockStorage();
-
-// Get statistics
-const stats = getMockStorageStats();
-console.log(stats); // { dynamodb: 10, s3: 5, scheduler: 2 }
-
-// Direct access to storage
-mockDynamoDB.size();
-mockS3.size();
-mockScheduler.size();
-```
-
-## Environment Variables for Local Development
-
-When running locally, make sure these environment variables are set:
+These are automatically set by `start-local.sh`:
 
 ```bash
-TABLE_NAME=kefir-table-local
+TABLE_NAME=kefir-local-table
 BUCKET_NAME=kefir-photos-local
-USER_POOL_ID=local
-USER_POOL_CLIENT_ID=local
+USER_POOL_ID=local-pool
+USER_POOL_CLIENT_ID=local-client
 SCHEDULER_GROUP_NAME=kefir-reminders-local
 STAGE=local
+DYNAMODB_ENDPOINT=http://localhost:8000
 ```
-
-These are automatically configured by Serverless Offline.
-

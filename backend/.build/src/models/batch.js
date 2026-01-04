@@ -34,7 +34,7 @@ exports.BatchSchema = zod_1.z.object({
     sugarAmount: zod_1.z.number().optional(), // grams
     notes: zod_1.z.string().optional(),
     photoKeys: zod_1.z.array(zod_1.z.string()).optional(),
-    isPublic: zod_1.z.boolean().default(false),
+    isPublic: zod_1.z.boolean(),
     publicNote: zod_1.z.string().optional(),
     createdAt: zod_1.z.string(),
     updatedAt: zod_1.z.string(),
@@ -48,12 +48,9 @@ exports.CreateBatchSchema = zod_1.z.object({
     sugarType: zod_1.z.string().max(50).optional(),
     sugarAmount: zod_1.z.number().min(0).max(1000).optional(),
     notes: zod_1.z.string().max(1000).optional(),
-    isPublic: zod_1.z.boolean().default(false),
+    isPublic: zod_1.z.boolean().optional(),
     publicNote: zod_1.z.string().max(500).optional(),
-}).transform((data) => ({
-    ...data,
-    isPublic: data.isPublic ?? false, // Ensure isPublic is always boolean
-}));
+});
 exports.UpdateBatchSchema = zod_1.z.object({
     name: zod_1.z.string().min(1).max(100).optional(),
     stage: zod_1.z.enum([exports.BatchStage.STAGE1_OPEN, exports.BatchStage.STAGE2_BOTTLED]).optional(),

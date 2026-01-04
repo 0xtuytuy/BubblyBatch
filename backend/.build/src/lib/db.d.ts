@@ -85,19 +85,6 @@ export declare const db: {
         };
     }>): Promise<void>;
 };
-/**
- * Seed offline storage with test data
- * Only used in offline mode
- */
-export declare function seedOfflineData(): void;
-/**
- * Clear offline storage
- */
-export declare function clearOfflineData(): void;
-/**
- * Get offline storage size
- */
-export declare function getOfflineStorageSize(): number;
 export declare const entities: {
     /**
      * Get or create a user

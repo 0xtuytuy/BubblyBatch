@@ -58,7 +58,7 @@ if [ -n "$USER_POOL_ID" ] && [ -n "$CLIENT_ID" ]; then
 else
   echo -e "${YELLOW}⚠️  USER_POOL_ID and CLIENT_ID not set${NC}"
   echo "Skipping token generation"
-  echo "Set these after running: npm run dev"
+  echo "Set these after deploying: npm run deploy:dev"
 fi
 echo
 
@@ -76,14 +76,15 @@ echo "📊 View Data:"
 echo "  DynamoDB Admin: http://localhost:8001"
 echo
 echo "🚀 Next Steps:"
-echo "  1. Start SST dev: npm run dev"
+echo "  1. Start local dev: npm run dev"
 echo "  2. Test API: curl http://localhost:3000/public/b/batch001"
-echo "  3. View Console: http://localhost:13557"
+echo
+echo "Optional: Start dev mode with --dev flag"
 echo
 
-# Optional: Start SST dev
+# Optional: Start dev
 if [ "$1" == "--dev" ]; then
-  echo "Starting SST dev mode..."
+  echo "Starting local dev mode..."
   npm run dev
 fi
 

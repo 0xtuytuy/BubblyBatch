@@ -2,12 +2,14 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Ima
 import { useState, useEffect } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Batch, Reminder } from '../../types';
 import { getBatchById, getRemindersByBatch, completeReminder, deleteBatch } from '../../services/mockApi';
 import QRCodeComponent from '../../components/QRCode';
 
 export default function BatchDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -156,7 +158,10 @@ export default function BatchDetail() {
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="bg-white px-4 py-3 border-b border-gray-200 flex-row items-center">
+      <View 
+        className="bg-white px-4 py-3 border-b border-gray-200 flex-row items-center"
+        style={{ paddingTop: insets.top + 12 }}
+      >
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>

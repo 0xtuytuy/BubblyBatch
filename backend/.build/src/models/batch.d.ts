@@ -26,7 +26,7 @@ export declare const BatchSchema: z.ZodObject<{
     sugarAmount: z.ZodOptional<z.ZodNumber>;
     notes: z.ZodOptional<z.ZodString>;
     photoKeys: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    isPublic: z.ZodDefault<z.ZodBoolean>;
+    isPublic: z.ZodBoolean;
     publicNote: z.ZodOptional<z.ZodString>;
     createdAt: z.ZodString;
     updatedAt: z.ZodString;
@@ -64,17 +64,17 @@ export declare const BatchSchema: z.ZodObject<{
     stage: "stage1_open" | "stage2_bottled";
     status: "active" | "in_fridge" | "ready" | "archived";
     startDate: string;
+    isPublic: boolean;
     targetDuration?: number | undefined;
     temperature?: number | undefined;
     sugarType?: string | undefined;
     sugarAmount?: number | undefined;
     notes?: string | undefined;
     photoKeys?: string[] | undefined;
-    isPublic?: boolean | undefined;
     publicNote?: string | undefined;
 }>;
 export type Batch = z.infer<typeof BatchSchema>;
-export declare const CreateBatchSchema: z.ZodEffects<z.ZodObject<{
+export declare const CreateBatchSchema: z.ZodObject<{
     name: z.ZodString;
     stage: z.ZodEnum<["stage1_open", "stage2_bottled"]>;
     startDate: z.ZodOptional<z.ZodString>;
@@ -83,20 +83,9 @@ export declare const CreateBatchSchema: z.ZodEffects<z.ZodObject<{
     sugarType: z.ZodOptional<z.ZodString>;
     sugarAmount: z.ZodOptional<z.ZodNumber>;
     notes: z.ZodOptional<z.ZodString>;
-    isPublic: z.ZodDefault<z.ZodBoolean>;
+    isPublic: z.ZodOptional<z.ZodBoolean>;
     publicNote: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    name: string;
-    stage: "stage1_open" | "stage2_bottled";
-    isPublic: boolean;
-    startDate?: string | undefined;
-    targetDuration?: number | undefined;
-    temperature?: number | undefined;
-    sugarType?: string | undefined;
-    sugarAmount?: number | undefined;
-    notes?: string | undefined;
-    publicNote?: string | undefined;
-}, {
     name: string;
     stage: "stage1_open" | "stage2_bottled";
     startDate?: string | undefined;
@@ -106,17 +95,6 @@ export declare const CreateBatchSchema: z.ZodEffects<z.ZodObject<{
     sugarAmount?: number | undefined;
     notes?: string | undefined;
     isPublic?: boolean | undefined;
-    publicNote?: string | undefined;
-}>, {
-    isPublic: boolean;
-    name: string;
-    stage: "stage1_open" | "stage2_bottled";
-    startDate?: string | undefined;
-    targetDuration?: number | undefined;
-    temperature?: number | undefined;
-    sugarType?: string | undefined;
-    sugarAmount?: number | undefined;
-    notes?: string | undefined;
     publicNote?: string | undefined;
 }, {
     name: string;

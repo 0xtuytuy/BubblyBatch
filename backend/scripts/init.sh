@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Initialize infrastructure project
-# This script sets up the infrastructure folder for first-time use
+# Initialize backend project for local development
+# This script sets up the backend folder for first-time use
 
 set -e
 
-echo "🚀 Initializing Kefir App Infrastructure..."
+echo "🚀 Initializing Kefir App Backend..."
 
 # Check Node.js version
 NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
@@ -30,7 +30,7 @@ fi
 
 echo "✅ Prerequisites check passed"
 
-# Navigate to infra directory
+# Navigate to backend directory
 cd "$(dirname "$0")/.."
 
 # Install dependencies
@@ -41,18 +41,20 @@ npm install
 if [ ! -f .env.local ]; then
   echo "📝 Creating .env.local..."
   cat > .env.local << EOF
-# Kefir App Infrastructure Environment Variables
-STAGE=dev
+# Kefir App Backend Environment Variables
+STAGE=local
+IS_OFFLINE=true
+DYNAMODB_ENDPOINT=http://localhost:8000
 EOF
   echo "✅ Created .env.local"
 fi
 
 echo ""
-echo "✨ Infrastructure initialization complete!"
+echo "✨ Backend initialization complete!"
 echo ""
 echo "Next steps:"
-echo "1. Review the PLAN.md file"
-echo "2. Deploy to dev: npm run deploy:dev"
-echo "3. Open SST Console: npm run console"
+echo "1. Start Docker services: npm run local:docker"
+echo "2. Setup local DB: npm run local:setup"
+echo "3. Seed test data: npm run local:seed"
+echo "4. Deploy to dev: npm run deploy:dev"
 echo ""
-

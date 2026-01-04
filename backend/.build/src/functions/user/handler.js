@@ -52,7 +52,7 @@ async function handleRegisterDevice(event, userId) {
 /**
  * GET /me/devices - List all devices for user
  */
-async function handleListDevices(event, userId) {
+async function handleListDevices(_event, userId) {
     const devices = await userService.getUserDevices(userId);
     return (0, response_1.success)({ devices, count: devices.length });
 }

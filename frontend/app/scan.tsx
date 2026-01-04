@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform, TextInput, Alert } 
 import { router } from 'expo-router';
 import { Camera, CameraView } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ScanQR() {
+  const insets = useSafeAreaInsets();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [manualInput, setManualInput] = useState('');
@@ -90,7 +92,10 @@ export default function ScanQR() {
   return (
     <View className="flex-1 bg-black">
       {/* Header */}
-      <View className="absolute top-0 left-0 right-0 z-10 px-4 py-3 pt-12 bg-black/50">
+      <View 
+        className="absolute top-0 left-0 right-0 z-10 px-4 py-3 bg-black/50"
+        style={{ paddingTop: insets.top + 12 }}
+      >
         <View className="flex-row items-center">
           <TouchableOpacity onPress={() => router.back()} className="mr-3">
             <Ionicons name="close" size={28} color="#ffffff" />

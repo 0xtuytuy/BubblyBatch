@@ -62,7 +62,7 @@ async function handleRegisterDevice(
  * GET /me/devices - List all devices for user
  */
 async function handleListDevices(
-  event: APIGatewayProxyEventV2,
+  _event: APIGatewayProxyEventV2,
   userId: string
 ): Promise<APIGatewayProxyResultV2> {
   const devices = await userService.getUserDevices(userId);

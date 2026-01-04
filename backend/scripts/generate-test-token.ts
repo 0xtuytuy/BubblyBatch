@@ -45,8 +45,8 @@ async function generateToken() {
     console.error("\nSet them in your environment:");
     console.error("  export USER_POOL_ID=us-east-1_xxxxx");
     console.error("  export CLIENT_ID=xxxxxxxxxxxxxxxxxxxxx");
-    console.error("\nOr get them from SST deployment output:");
-    console.error("  cd infra && npm run dev");
+    console.error("\nOr get them from deployment output:");
+    console.error("  npm run deploy:dev");
     process.exit(1);
   }
   

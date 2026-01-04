@@ -9,6 +9,24 @@ provider:
   stage: ${opt:stage, 'local'}
   memorySize: 256
   timeout: 30
+  httpApi:
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-Amz-Date
+        - X-Api-Key
+        - X-Amz-Security-Token
+        - X-User-Id
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      maxAge: 3600
   environment:
     TABLE_NAME: ${self:custom.tableName}
     BUCKET_NAME: ${self:custom.bucketName}
@@ -82,21 +100,12 @@ functions:
       - httpApi:
           path: /batches
           method: POST
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
       - httpApi:
           path: /batches
           method: GET
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
       - httpApi:
           path: /batches/{id}
           method: GET
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
 
   # Batch event functions
   event:
@@ -105,15 +114,9 @@ functions:
       - httpApi:
           path: /batches/{id}/events
           method: POST
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
       - httpApi:
           path: /batches/{id}/events
           method: GET
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
 
   # Reminder functions
   reminder:
@@ -122,21 +125,12 @@ functions:
       - httpApi:
           path: /batches/{id}/reminders/suggestions
           method: GET
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
       - httpApi:
           path: /batches/{id}/reminders/confirm
           method: POST
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
       - httpApi:
           path: /me/reminders
           method: GET
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
 
   # User/Device functions
   user:
@@ -145,9 +139,6 @@ functions:
       - httpApi:
           path: /me/devices
           method: POST
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
 
   # Export function
   export:
@@ -157,9 +148,6 @@ functions:
       - httpApi:
           path: /export.csv
           method: GET
-          authorizer:
-            type: jwt
-            id: !Ref HttpApiAuthorizer
 
   # Public batch view (no auth)
   public:
@@ -176,19 +164,7 @@ resources:
   - ${file(resources/eventbridge.yml)}
   - ${file(resources/api-gateway.yml)}
 
-  - Resources:
-      # Additional outputs for easy reference
-      GatewayResponseDefault4XX:
-        Type: AWS::ApiGatewayV2::GatewayResponse
-        Properties:
-          ResponseParameters:
-            gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-            gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
-          ResponseType: DEFAULT_4XX
-          RestApiId:
-            Ref: HttpApi
-    
-    Outputs:
+  - Outputs:
       ApiUrl:
         Description: API Gateway endpoint URL
         Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'

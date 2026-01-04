@@ -2,10 +2,12 @@ import { View, Text, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingVi
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createBatch } from '../../services/mockApi';
 import { BatchFormData } from '../../types';
 
 export default function CreateBatch() {
+  const insets = useSafeAreaInsets();
   const [formData, setFormData] = useState<BatchFormData>({
     waterVolumeMl: '',
     sugarGrams: '',
@@ -136,7 +138,10 @@ export default function CreateBatch() {
   return (
     <View className="flex-1 bg-white">
       {/* Header */}
-      <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
+      <View 
+        className="px-4 py-3 border-b border-gray-200 flex-row items-center"
+        style={{ paddingTop: insets.top + 12 }}
+      >
         <TouchableOpacity onPress={() => router.back()} className="mr-3">
           <Ionicons name="close" size={24} color="#374151" />
         </TouchableOpacity>

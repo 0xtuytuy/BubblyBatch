@@ -6,7 +6,7 @@ The Kefir app uses a single-table design pattern for DynamoDB to optimize for ac
 
 ## Table Configuration
 
-- **Table Name**: `kefir-app-{stage}-table`
+- **Table Name**: `kefir-table-{stage}`
 - **Partition Key**: `PK` (String)
 - **Sort Key**: `SK` (String)
 - **Billing Mode**: On-demand
@@ -289,55 +289,6 @@ const params = {
 };
 ```
 
-### 4. Export All User Data (CSV)
-
-```typescript
-// Query all items for user
-const params = {
-  TableName: tableName,
-  KeyConditionExpression: "PK = :pk",
-  ExpressionAttributeValues: {
-    ":pk": "USER#123",
-  },
-};
-
-// Results include:
-// - User metadata
-// - All batches
-// - All devices
-
-// Then query each batch for events and reminders
-```
-
-## Capacity Planning
-
-### Estimated Item Sizes
-
-| Entity | Size (KB) | Notes |
-|--------|-----------|-------|
-| User | 1 | Minimal metadata |
-| Batch | 2 | Stage 1 + 2 data |
-| Event | 1-3 | Depends on note length |
-| Reminder | 1 | Simple reminder data |
-| Device | 1 | Push token + metadata |
-
-### Estimated Storage (Per User)
-
-- 1 User = 1 KB
-- 10 Batches = 20 KB
-- 50 Events = 100 KB
-- 20 Reminders = 20 KB
-- 3 Devices = 3 KB
-- **Total**: ~150 KB per active user
-
-### Cost Estimate (On-Demand)
-
-For 1,000 users with 10 batches each:
-- Storage: 150 MB = $0.04/month
-- Reads: 100K requests = $0.025/month
-- Writes: 50K requests = $0.06/month
-- **Total**: ~$0.125/month
-
 ## Best Practices
 
 ### 1. Use Composite Keys
@@ -360,42 +311,4 @@ Include timestamps in sort keys for chronological queries.
 
 ### 6. Avoid Hot Partitions
 Distribute writes across multiple partition keys (already done per-user).
-
-## Migration Strategy
-
-### Adding New Attributes
-1. Add attribute to type definition
-2. Update Lambda functions
-3. Deploy with backward compatibility
-4. Old items work without migration
-
-### Changing Access Patterns
-1. Add new GSI if needed
-2. Backfill GSI attributes (script)
-3. Update queries to use new index
-4. Remove old GSI after validation
-
-### Schema Evolution
-- Use optional attributes for new fields
-- Version entities if breaking changes needed
-- Keep migration scripts in `scripts/migrations/`
-
-## Testing
-
-### Local Development
-Use DynamoDB Local or SST's built-in dev mode.
-
-### Seed Data
-Run `tsx scripts/seed-dev.ts` to populate test data.
-
-### Access Pattern Testing
-Create unit tests for each query pattern:
-```typescript
-describe("Batch Access Patterns", () => {
-  test("Get all user batches", async () => {
-    const result = await getUserBatches("USER#123");
-    expect(result.length).toBeGreaterThan(0);
-  });
-});
-```
 

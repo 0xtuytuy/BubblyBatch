@@ -22,13 +22,7 @@ Resources:
         Variables:
           TABLE_NAME: ${self:custom.tableName}
       Code:
-        ZipFile: |
-          exports.handler = async (event) => {
-            console.log('Reminder triggered:', JSON.stringify(event));
-            // TODO: Implement push notification logic
-            // This will send notifications to registered devices
-            return { statusCode: 200 };
-          };
+        ZipFile: "exports.handler = async (event) => { console.log('Reminder:', event); return { statusCode: 200 }; };"
 
   ReminderNotificationLambdaRole:
     Type: AWS::IAM::Role

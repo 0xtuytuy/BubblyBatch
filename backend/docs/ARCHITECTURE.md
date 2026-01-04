@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Kefir app uses a serverless architecture on AWS with a managed frontend on Vercel/Netlify.
+The Kefir app uses a serverless architecture on AWS with managed infrastructure via Serverless Framework.
 
 ## Architecture Diagram
 
@@ -139,75 +139,6 @@ The Kefir app uses a serverless architecture on AWS with a managed frontend on V
 5. Lambda returns CSV file
 6. Frontend downloads or shares file
 
-## DynamoDB Single-Table Design
-
-All entities stored in one table with the following access patterns:
-
-### Table Schema
-- **Partition Key**: `PK`
-- **Sort Key**: `SK`
-- **GSI1**: `GSI1PK` / `GSI1SK`
-
-### Entity Patterns
-
-| Entity | PK | SK | GSI1PK | GSI1SK |
-|--------|----|----|--------|--------|
-| User | `USER#<userId>` | `METADATA` | - | - |
-| Batch | `USER#<userId>` | `BATCH#<batchId>` | `BATCH#<batchId>` | `STATUS#<status>` |
-| Event | `BATCH#<batchId>` | `EVENT#<timestamp>` | - | - |
-| Reminder | `BATCH#<batchId>` | `REMINDER#<reminderId>` | `USER#<userId>` | `DUE#<timestamp>` |
-| Device | `USER#<userId>` | `DEVICE#<deviceId>` | - | - |
-
-### Query Examples
-```typescript
-// Get all batches for user
-PK = USER#123 AND SK begins_with BATCH#
-
-// Get batch by ID (any user)
-GSI1PK = BATCH#abc AND GSI1SK begins_with STATUS#
-
-// Get events for batch
-PK = BATCH#abc AND SK begins_with EVENT#
-
-// Get reminders due for user
-GSI1PK = USER#123 AND GSI1SK begins_with DUE# AND GSI1SK < NOW
-```
-
-## API Endpoints
-
-### Authentication
-- `POST /auth/login` - Send OTP email
-- `POST /auth/verify` - Verify OTP code
-
-### Batches
-- `POST /batches` - Create batch
-- `GET /batches` - List user's batches
-- `GET /batches/:id` - Get batch details
-- `PATCH /batches/:id` - Update batch
-- `DELETE /batches/:id` - Archive batch
-
-### Events
-- `POST /batches/:id/events` - Add event to batch
-- `GET /batches/:id/events` - Get batch timeline
-
-### Reminders
-- `GET /batches/:id/reminders/suggestions` - Get suggested reminders
-- `POST /batches/:id/reminders/confirm` - Schedule reminder
-- `GET /me/reminders` - Get user's upcoming reminders
-- `DELETE /reminders/:id` - Cancel reminder
-
-### Devices
-- `POST /me/devices` - Register device for push notifications
-- `GET /me/devices` - List registered devices
-- `DELETE /me/devices/:id` - Unregister device
-
-### Utilities
-- `GET /export.csv` - Export all user data as CSV
-- `GET /me` - Get current user profile
-
-### Public (No Auth)
-- `GET /public/b/:batchId` - View public batch summary
-
 ## Security
 
 ### Authentication
@@ -229,14 +160,7 @@ GSI1PK = USER#123 AND GSI1SK begins_with DUE# AND GSI1SK < NOW
 ### API Security
 - CORS configured for app domains only
 - Throttling: 1000 requests/sec per user
-- WAF (optional for prod)
 - Request validation enabled
-
-### Data Security
-- DynamoDB encryption at rest (AWS managed)
-- CloudWatch Logs encrypted
-- IAM roles follow least privilege
-- No sensitive data in logs
 
 ## Scaling & Performance
 
@@ -250,26 +174,6 @@ GSI1PK = USER#123 AND GSI1SK begins_with DUE# AND GSI1SK < NOW
 - DynamoDB single-table design reduces latency
 - GSI for efficient queries
 - S3 direct uploads (no Lambda bottleneck)
-- Lambda cold start mitigation: provisioned concurrency (prod)
-
-### Cost Optimization
-- On-demand billing for variable workloads
-- S3 lifecycle policies for old photos
-- CloudWatch log retention: 14 days (dev), 30 days (prod)
-- No NAT gateway needed (public Lambda)
-
-## Disaster Recovery
-
-### Backups
-- DynamoDB point-in-time recovery (prod)
-- S3 versioning enabled (prod)
-- CloudWatch logs retained for 30 days
-
-### Recovery Procedures
-1. **DynamoDB corruption**: Restore from point-in-time backup
-2. **S3 data loss**: Restore from versioning
-3. **Lambda failure**: Automatic retries, CloudWatch alarms
-4. **Region outage**: Manual failover to secondary region (future)
 
 ## Monitoring & Observability
 
@@ -279,39 +183,8 @@ GSI1PK = USER#123 AND GSI1SK begins_with DUE# AND GSI1SK < NOW
 - DynamoDB consumed capacity, throttles
 - S3 request count, errors
 
-### Alarms (Prod)
-- Lambda error rate > 1%
-- API Gateway 5xx rate > 1%
-- DynamoDB throttling
-- S3 4xx/5xx errors
-
 ### Logging
 - All Lambda invocations logged to CloudWatch
 - Structured JSON logs with correlation IDs
 - Log retention: 14 days (dev), 30 days (prod)
-
-### Debugging
-- SST Console for real-time logs and metrics
-- CloudWatch Logs Insights for log analysis
-- X-Ray tracing (optional)
-
-## Future Enhancements
-
-### Short-term
-- [ ] Custom domain for API
-- [ ] API versioning (v2)
-- [ ] Rate limiting per user
-- [ ] Batch templates
-
-### Medium-term
-- [ ] WebSocket API for real-time updates
-- [ ] GraphQL API (AppSync)
-- [ ] Multi-region deployment
-- [ ] Advanced analytics
-
-### Long-term
-- [ ] Machine learning for fermentation predictions
-- [ ] Social features (share batches)
-- [ ] Marketplace integration
-- [ ] White-label solution for other fermentation types
 
