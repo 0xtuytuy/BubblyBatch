@@ -10,15 +10,20 @@ import {
   BatchWriteCommand,
 } from '@aws-sdk/lib-dynamodb';
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client, {
+const IS_OFFLINE = process.env.IS_OFFLINE === 'true';
+const TABLE_NAME = process.env.TABLE_NAME!;
+
+// In-memory storage for offline mode
+const offlineStorage = new Map<string, any>();
+
+// Initialize DynamoDB client (only used in online mode)
+const client = IS_OFFLINE ? null : new DynamoDBClient({});
+const docClient = IS_OFFLINE ? null : DynamoDBDocumentClient.from(client!, {
   marshallOptions: {
     removeUndefinedValues: true,
     convertEmptyValues: false,
   },
 });
-
-const TABLE_NAME = process.env.TABLE_NAME!;
 
 // Key builders for single-table design
 export const keys = {
@@ -49,16 +54,25 @@ export const keys = {
 // Base CRUD operations
 export const db = {
   /**
-   * Put an item into DynamoDB
+   * Put an item into DynamoDB (or offline storage)
    */
   async put(item: Record<string, any>): Promise<void> {
-    await docClient.send(
+    const itemWithTimestamp = {
+      ...item,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (IS_OFFLINE) {
+      const key = `${item.PK}#${item.SK}`;
+      offlineStorage.set(key, itemWithTimestamp);
+      console.log(`[OFFLINE DB] PUT ${key}`);
+      return;
+    }
+
+    await docClient!.send(
       new PutCommand({
         TableName: TABLE_NAME,
-        Item: {
-          ...item,
-          updatedAt: new Date().toISOString(),
-        },
+        Item: itemWithTimestamp,
       })
     );
   },
@@ -67,7 +81,14 @@ export const db = {
    * Get a single item by PK and SK
    */
   async get(PK: string, SK: string): Promise<Record<string, any> | null> {
-    const result = await docClient.send(
+    if (IS_OFFLINE) {
+      const key = `${PK}#${SK}`;
+      const item = offlineStorage.get(key);
+      console.log(`[OFFLINE DB] GET ${key} - ${item ? 'found' : 'not found'}`);
+      return item || null;
+    }
+
+    const result = await docClient!.send(
       new GetCommand({
         TableName: TABLE_NAME,
         Key: { PK, SK },
@@ -89,6 +110,30 @@ export const db = {
     limit?: number;
     sortAscending?: boolean;
   }): Promise<Record<string, any>[]> {
+    if (IS_OFFLINE) {
+      const items: any[] = [];
+      for (const [key, value] of offlineStorage.entries()) {
+        if (key.startsWith(params.PK)) {
+          if (!params.SK || 
+              (params.SK.beginsWith && value.SK.startsWith(params.SK.beginsWith)) ||
+              (params.SK.equals && value.SK === params.SK.equals) ||
+              (params.SK.between && value.SK >= params.SK.between[0] && value.SK <= params.SK.between[1])) {
+            items.push(value);
+          }
+        }
+      }
+      
+      // Sort by SK
+      items.sort((a, b) => {
+        const order = params.sortAscending ? 1 : -1;
+        return a.SK < b.SK ? -order : order;
+      });
+      
+      const limited = params.limit ? items.slice(0, params.limit) : items;
+      console.log(`[OFFLINE DB] QUERY ${params.PK} - found ${limited.length} items`);
+      return limited;
+    }
+
     let KeyConditionExpression = 'PK = :pk';
     const ExpressionAttributeValues: Record<string, any> = {
       ':pk': params.PK,
@@ -108,7 +153,7 @@ export const db = {
       }
     }
 
-    const result = await docClient.send(
+    const result = await docClient!.send(
       new QueryCommand({
         TableName: TABLE_NAME,
         KeyConditionExpression,
@@ -132,6 +177,22 @@ export const db = {
     };
     limit?: number;
   }): Promise<Record<string, any>[]> {
+    if (IS_OFFLINE) {
+      const items: any[] = [];
+      for (const [_, value] of offlineStorage.entries()) {
+        if (value.GSI1PK === params.GSI1PK) {
+          if (!params.GSI1SK ||
+              (params.GSI1SK.beginsWith && value.GSI1SK?.startsWith(params.GSI1SK.beginsWith)) ||
+              (params.GSI1SK.equals && value.GSI1SK === params.GSI1SK.equals)) {
+            items.push(value);
+          }
+        }
+      }
+      const limited = params.limit ? items.slice(0, params.limit) : items;
+      console.log(`[OFFLINE DB] QUERY GSI1 ${params.GSI1PK} - found ${limited.length} items`);
+      return limited;
+    }
+
     let KeyConditionExpression = 'GSI1PK = :gsi1pk';
     const ExpressionAttributeValues: Record<string, any> = {
       ':gsi1pk': params.GSI1PK,
@@ -147,7 +208,7 @@ export const db = {
       }
     }
 
-    const result = await docClient.send(
+    const result = await docClient!.send(
       new QueryCommand({
         TableName: TABLE_NAME,
         IndexName: 'GSI1',
@@ -168,6 +229,23 @@ export const db = {
     SK: string;
     updates: Record<string, any>;
   }): Promise<Record<string, any>> {
+    if (IS_OFFLINE) {
+      const key = `${params.PK}#${params.SK}`;
+      const existing = offlineStorage.get(key);
+      if (!existing) {
+        console.log(`[OFFLINE DB] UPDATE ${key} - not found`);
+        return {};
+      }
+      const updated = {
+        ...existing,
+        ...params.updates,
+        updatedAt: new Date().toISOString(),
+      };
+      offlineStorage.set(key, updated);
+      console.log(`[OFFLINE DB] UPDATE ${key}`);
+      return updated;
+    }
+
     const updateExpressions: string[] = [];
     const ExpressionAttributeNames: Record<string, string> = {};
     const ExpressionAttributeValues: Record<string, any> = {};
@@ -185,7 +263,7 @@ export const db = {
     ExpressionAttributeNames['#updatedAt'] = 'updatedAt';
     ExpressionAttributeValues[':updatedAt'] = new Date().toISOString();
 
-    const result = await docClient.send(
+    const result = await docClient!.send(
       new UpdateCommand({
         TableName: TABLE_NAME,
         Key: { PK: params.PK, SK: params.SK },
@@ -203,7 +281,14 @@ export const db = {
    * Delete an item
    */
   async delete(PK: string, SK: string): Promise<void> {
-    await docClient.send(
+    if (IS_OFFLINE) {
+      const key = `${PK}#${SK}`;
+      const deleted = offlineStorage.delete(key);
+      console.log(`[OFFLINE DB] DELETE ${key} - ${deleted ? 'success' : 'not found'}`);
+      return;
+    }
+
+    await docClient!.send(
       new DeleteCommand({
         TableName: TABLE_NAME,
         Key: { PK, SK },
@@ -217,7 +302,13 @@ export const db = {
   async batchGet(keys: Array<{ PK: string; SK: string }>): Promise<Record<string, any>[]> {
     if (keys.length === 0) return [];
 
-    const result = await docClient.send(
+    if (IS_OFFLINE) {
+      const items = keys.map(({ PK, SK }) => offlineStorage.get(`${PK}#${SK}`)).filter(Boolean);
+      console.log(`[OFFLINE DB] BATCH GET ${keys.length} keys - found ${items.length} items`);
+      return items;
+    }
+
+    const result = await docClient!.send(
       new BatchGetCommand({
         RequestItems: {
           [TABLE_NAME]: {
@@ -235,6 +326,20 @@ export const db = {
    */
   async batchWrite(operations: Array<{ put?: Record<string, any>; delete?: { PK: string; SK: string } }>): Promise<void> {
     if (operations.length === 0) return;
+
+    if (IS_OFFLINE) {
+      for (const op of operations) {
+        if (op.put) {
+          const key = `${op.put.PK}#${op.put.SK}`;
+          offlineStorage.set(key, { ...op.put, updatedAt: new Date().toISOString() });
+        } else if (op.delete) {
+          const key = `${op.delete.PK}#${op.delete.SK}`;
+          offlineStorage.delete(key);
+        }
+      }
+      console.log(`[OFFLINE DB] BATCH WRITE ${operations.length} operations`);
+      return;
+    }
 
     const requests = operations.map((op) => {
       if (op.put) {
@@ -256,7 +361,7 @@ export const db = {
       throw new Error('Invalid batch operation');
     });
 
-    await docClient.send(
+    await docClient!.send(
       new BatchWriteCommand({
         RequestItems: {
           [TABLE_NAME]: requests,
@@ -265,6 +370,101 @@ export const db = {
     );
   },
 };
+
+/**
+ * Seed offline storage with test data
+ * Only used in offline mode
+ */
+export function seedOfflineData() {
+  if (!IS_OFFLINE) return;
+
+  console.log('[OFFLINE DB] Seeding test data...');
+  
+  const now = new Date().toISOString();
+  
+  // Seed test users
+  const testUsers = [
+    { userId: 'test-user-1', email: 'alice@example.com', name: 'Alice Smith' },
+    { userId: 'test-user-2', email: 'bob@example.com', name: 'Bob Jones' },
+  ];
+  
+  for (const user of testUsers) {
+    const userKeys = keys.user(user.userId);
+    offlineStorage.set(`${userKeys.PK}#${userKeys.SK}`, {
+      ...userKeys,
+      ...user,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+  
+  // Seed test batches
+  const testBatches = [
+    { batchId: 'batch-1', userId: 'test-user-1', name: 'Strawberry Kefir', stage: 'stage1_open', status: 'active' },
+    { batchId: 'batch-2', userId: 'test-user-1', name: 'Plain Kefir', stage: 'stage2_bottled', status: 'in_fridge' },
+    { batchId: 'batch-3', userId: 'test-user-2', name: 'Blueberry Kefir', stage: 'stage1_open', status: 'active' },
+  ];
+  
+  for (const batch of testBatches) {
+    const batchKeys = keys.batch(batch.userId, batch.batchId);
+    offlineStorage.set(`${batchKeys.PK}#${batchKeys.SK}`, {
+      ...batchKeys,
+      ...batch,
+      startDate: now,
+      isPublic: false,
+      photoKeys: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+    
+    // Add sample event
+    const eventKeys = keys.event(batch.batchId, now);
+    offlineStorage.set(`${eventKeys.PK}#${eventKeys.SK}`, {
+      ...eventKeys,
+      eventId: `event-${batch.batchId}-1`,
+      batchId: batch.batchId,
+      userId: batch.userId,
+      type: 'note',
+      timestamp: now,
+      description: 'Batch started',
+      createdAt: now,
+    });
+  }
+  
+  // Seed a test device
+  const deviceKeys = keys.device('test-user-1', 'device-1');
+  offlineStorage.set(`${deviceKeys.PK}#${deviceKeys.SK}`, {
+    ...deviceKeys,
+    deviceId: 'device-1',
+    userId: 'test-user-1',
+    platform: 'ios',
+    token: 'mock-fcm-token-123',
+    deviceName: 'iPhone 15 Pro',
+    appVersion: '1.0.0',
+    lastActiveAt: now,
+    createdAt: now,
+    updatedAt: now,
+  });
+  
+  console.log(`[OFFLINE DB] Seeded ${testUsers.length} users, ${testBatches.length} batches, ${testBatches.length} events, 1 device`);
+}
+
+/**
+ * Clear offline storage
+ */
+export function clearOfflineData() {
+  if (!IS_OFFLINE) return;
+  offlineStorage.clear();
+  console.log('[OFFLINE DB] Storage cleared');
+}
+
+/**
+ * Get offline storage size
+ */
+export function getOfflineStorageSize() {
+  if (!IS_OFFLINE) return 0;
+  return offlineStorage.size;
+}
 
 // Higher-level entity operations
 export const entities = {

@@ -183,7 +183,7 @@ This document outlines the step-by-step plan for implementing the Kefir app infr
 
 ## Phase 8: Production Deployment
 
-- [ ] Register domain (kefirproducer.com)
+- [ ] Register domain (bubblebatch.com)
 - [ ] Configure Route 53
 - [ ] Set up custom domain for API Gateway
 - [ ] Deploy prod environment

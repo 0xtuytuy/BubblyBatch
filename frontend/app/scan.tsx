@@ -30,7 +30,7 @@ export default function ScanQR() {
 
   const processQRData = (data: string) => {
     // Extract batch ID from URL
-    // Expected format: https://kefirproducer.com/b/{batchId}
+    // Expected format: https://bubblebatch.com/b/{batchId}
     const match = data.match(/\/b\/([a-zA-Z0-9-]+)/);
     
     if (match && match[1]) {

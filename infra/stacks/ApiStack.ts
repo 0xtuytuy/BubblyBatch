@@ -277,7 +277,7 @@ export default function ApiStack(props: ApiStackProps) {
     protocolType: "HTTP",
     corsConfiguration: {
       allowOrigins: $app.stage === "prod" 
-        ? ["https://kefirproducer.com", "https://*.kefirproducer.com"]
+        ? ["https://bubblebatch.com", "https://*.bubblebatch.com"]
         : ["*"],
       allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],

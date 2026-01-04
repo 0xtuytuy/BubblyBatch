@@ -36,6 +36,35 @@ backend/src/functions/
     └── service.ts    # Business logic, orchestration
 ```
 
+## ⚠️ LOCAL DEVELOPMENT - IMPORTANT
+
+**DO NOT run the local backend server yourself!**
+
+When the user needs to test backend changes:
+- ❌ **DON'T** run `npm run dev`, `serverless offline`, or any local server commands
+- ❌ **DON'T** attempt to start local mock services or DynamoDB Local
+- ❌ **DON'T** deploy to AWS stages without explicit user permission
+- ✅ **DO** ask the user to start the local backend server manually
+- ✅ **DO** provide clear instructions on what commands they should run
+
+**Example:**
+```
+To test these changes locally, please run in the backend directory:
+
+npm run dev
+
+This will start the Serverless Offline server on http://localhost:3000
+```
+
+**Reason:** Local backend setup may require:
+- AWS credentials configuration
+- DynamoDB Local or mock services
+- Environment variables and secrets
+- Specific ports that may conflict with running processes
+- User-controlled deployment decisions
+
+Always let the user control when and how to start backend services.
+
 ## ✅ Input Validation with Zod
 
 ### Schema Definition Pattern

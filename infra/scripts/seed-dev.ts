@@ -4,14 +4,31 @@
  * This script populates the dev environment with test data for development.
  * 
  * Usage:
- *   tsx scripts/seed-dev.ts
+ *   tsx scripts/seed-dev.ts          # Seed AWS dev environment
+ *   tsx scripts/seed-dev.ts --local  # Seed local DynamoDB
  */
 
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 
-const TABLE_NAME = process.env.TABLE_NAME || "kefir-app-dev-table";
-const client = new DynamoDBClient({ region: "us-east-1" });
+const IS_LOCAL = process.argv.includes("--local");
+const TABLE_NAME = IS_LOCAL 
+  ? "kefir-local-table"
+  : (process.env.TABLE_NAME || "kefir-app-dev-table");
+
+// Configure client for local or AWS
+const client = new DynamoDBClient(
+  IS_LOCAL
+    ? {
+        endpoint: process.env.DYNAMODB_ENDPOINT || "http://localhost:8000",
+        region: "us-east-1",
+        credentials: {
+          accessKeyId: "local",
+          secretAccessKey: "local",
+        },
+      }
+    : { region: "us-east-1" }
+);
 
 interface SeedData {
   PK: string;
@@ -106,7 +123,10 @@ const seedData: SeedData[] = [
 ];
 
 async function seed() {
-  console.log(`🌱 Seeding dev data to table: ${TABLE_NAME}`);
+  console.log(`🌱 Seeding ${IS_LOCAL ? "local" : "AWS"} data to table: ${TABLE_NAME}`);
+  if (IS_LOCAL) {
+    console.log(`   Endpoint: ${process.env.DYNAMODB_ENDPOINT || "http://localhost:8000"}\n`);
+  }
   
   for (const item of seedData) {
     try {

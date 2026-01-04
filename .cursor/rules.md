@@ -181,6 +181,43 @@ Examples:
 5. **Keep it simple** - Avoid over-engineering for a solo MVP
 6. **Test your changes** - Verify code compiles and follows patterns
 7. **Document decisions** - Especially architectural changes
+8. **Never run local dev servers** - See below ⚠️
+
+## ⚠️ CRITICAL: Do Not Run Local Development Servers
+
+**AI Assistants must NEVER run local development servers or deployment commands!**
+
+### What NOT to Do:
+- ❌ `npm start` / `expo start` (frontend)
+- ❌ `npm run dev` / `serverless offline` (backend)
+- ❌ `sst dev` / `sst deploy` (infrastructure)
+- ❌ Starting simulators or emulators
+- ❌ Deploying to AWS without explicit permission
+
+### What TO Do Instead:
+- ✅ Ask the user to start the dev server
+- ✅ Provide clear instructions on which commands to run
+- ✅ Explain what needs to be tested
+- ✅ Wait for user to confirm the server is running
+
+**Why?**
+- Local servers require specific environment setup
+- May need AWS credentials, secrets, or API keys
+- Can conflict with user's running processes
+- Deployment has cost implications
+- User should control when/how services start
+
+**Example Response:**
+```
+I've made changes to the batch handler. To test these:
+
+1. In the backend directory, run:
+   npm run dev
+
+2. The API will be available at http://localhost:3000
+
+3. Test with: curl http://localhost:3000/batches
+```
 
 ## 📊 Project Status
 

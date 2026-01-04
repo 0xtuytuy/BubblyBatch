@@ -76,7 +76,7 @@ export class BatchService {
    */
   async updateBatch(batchId: string, userId: string, updates: UpdateBatchInput): Promise<Batch> {
     // First verify the batch exists and user has access
-    const batch = await this.getBatch(batchId, userId);
+    await this.getBatch(batchId, userId);
 
     const batchKeys = keys.batch(userId, batchId);
     const updated = await db.update({
@@ -92,7 +92,7 @@ export class BatchService {
    * Delete a batch (soft delete by archiving)
    */
   async deleteBatch(batchId: string, userId: string): Promise<void> {
-    const batch = await this.getBatch(batchId, userId);
+    await this.getBatch(batchId, userId);
 
     // Soft delete by archiving
     const batchKeys = keys.batch(userId, batchId);

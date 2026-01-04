@@ -43,7 +43,7 @@ infra/
 1. **Node.js**: v18 or later
 2. **AWS CLI**: Configured with credentials
 3. **AWS Account**: With appropriate permissions
-4. **Domain** (optional): kefirproducer.com for production
+4. **Domain** (optional): bubblebatch.com for production
 
 ## Quick Start
 
@@ -65,6 +65,38 @@ npm run deploy:dev
 ```bash
 npm run deploy:prod
 ```
+
+## Local Development
+
+For local testing with minimal AWS costs (~$0.02/month), see **[LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md)** for complete setup guide.
+
+**Quick start**:
+```bash
+# Start Docker services
+npm run local:docker
+
+# Setup local DynamoDB tables
+npm run local:setup
+
+# Seed test data
+npm run local:seed
+
+# Start SST dev mode
+npm run dev:local
+
+# Access services:
+# - API: http://localhost:3000
+# - SST Console: http://localhost:13557
+# - DynamoDB Admin: http://localhost:8001
+```
+
+**Features**:
+- ✅ Lambda functions run locally with hot reload
+- ✅ DynamoDB Local in Docker (no AWS costs)
+- ✅ Mock EventBridge scheduler
+- ✅ Mock push notifications
+- ✅ Real Cognito authentication (free tier)
+- ✅ Optional LocalStack for S3
 
 ## Environment Variables
 

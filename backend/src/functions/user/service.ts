@@ -1,6 +1,5 @@
 import { db, keys, entities } from '../../lib/db';
 import { Device, RegisterDeviceInput } from '../../models/device';
-import { ConflictError } from '../../utils/errors';
 
 export class UserService {
   /**

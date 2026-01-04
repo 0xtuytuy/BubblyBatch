@@ -11,6 +11,27 @@ export default function Verify() {
   const [error, setError] = useState('');
   
   const { confirmSignIn } = useAuth();
+
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3838fb55-de9c-4223-a185-5d7ad4b60c07', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'H4',
+        location: 'app/(auth)/verify.tsx:17',
+        message: 'Verify screen mounted',
+        data: {
+          hasEmail: !!email,
+          filledSlots: code.filter(Boolean).length,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [email, code]);
   
   // Refs for input fields
   const inputRefs = [
@@ -78,6 +99,25 @@ export default function Verify() {
 
   const handleVerify = async (verificationCode?: string) => {
     const finalCode = verificationCode || code.join('');
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3838fb55-de9c-4223-a185-5d7ad4b60c07', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'H4',
+        location: 'app/(auth)/verify.tsx:82',
+        message: 'Handle verify invoked',
+        data: {
+          hasEmail: !!email,
+          codeLength: finalCode.length,
+          isLoadingBefore: isLoading,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     
     if (finalCode.length !== 6) {
       setError('Please enter the 6-digit code');

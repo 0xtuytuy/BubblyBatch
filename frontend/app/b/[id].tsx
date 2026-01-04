@@ -4,8 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 /**
  * Deep Link Handler
- * Handles QR code deep links in the format: kefirproducer://b/{batchId}
- * or web URLs: https://kefirproducer.com/b/{batchId}
+ * Handles QR code deep links in the format: bubblebatch://b/{batchId}
+ * or web URLs: https://bubblebatch.com/b/{batchId}
  */
 export default function DeepLinkBatch() {
   const { id } = useLocalSearchParams<{ id: string }>();

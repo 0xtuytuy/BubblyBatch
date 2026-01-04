@@ -236,7 +236,7 @@ export const initializeNotifications = async (): Promise<PushNotificationToken |
 export const sendTestNotification = async () => {
   await scheduleNotification(
     'Test Notification',
-    'This is a test notification from Kefir Producer',
+    'This is a test notification from Bubble Batch',
     { test: true },
     5
   );

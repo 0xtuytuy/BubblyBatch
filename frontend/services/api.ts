@@ -1,14 +1,20 @@
 /**
  * API Service Layer
  * Provides a centralized interface for API calls
- * Switches between mock and real API based on environment variable
+ * Switches between mock, local backend, and production API based on environment variables
  */
 
 import { getSession } from './auth';
 import * as mockApi from './mockApi';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 const USE_MOCK_API = process.env.EXPO_PUBLIC_USE_MOCK_API === 'true';
+const USE_LOCAL_BACKEND = process.env.EXPO_PUBLIC_USE_LOCAL_BACKEND === 'true';
+
+// API URL configuration
+// Local backend doesn't use /api prefix, production does
+const API_URL = USE_LOCAL_BACKEND
+  ? (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000')
+  : (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api');
 
 /**
  * Base fetch wrapper with auth headers and error handling
@@ -19,11 +25,20 @@ const fetchWithAuth = async (
 ): Promise<Response> => {
   const token = await getSession();
   
+  // Build headers based on environment
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
+
+  // Local backend uses X-User-Id header instead of Authorization
+  if (USE_LOCAL_BACKEND && token) {
+    headers['X-User-Id'] = token;
+    console.log('[LOCAL BACKEND] Request to:', endpoint, 'with X-User-Id:', token);
+  } else if (token) {
+    // Production uses JWT Authorization header
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
   const url = `${API_URL}${endpoint}`;
 
@@ -32,6 +47,10 @@ const fetchWithAuth = async (
       ...options,
       headers,
     });
+
+    if (!response.ok) {
+      console.error(`API request failed: ${response.status} ${response.statusText}`);
+    }
 
     return response;
   } catch (error) {

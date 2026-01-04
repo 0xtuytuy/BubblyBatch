@@ -5,7 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "serverless offline start",
+    "dev": "./start-local.sh",
+    "local:start": "./start-local.sh",
+    "local:clean": "cross-env IS_OFFLINE=true ts-node local/clean.ts",
+    "local:seed": "cross-env IS_OFFLINE=true ts-node local/seed.ts",
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod",
@@ -30,11 +33,13 @@
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
     "prettier": "^3.2.4",
     "serverless": "^3.38.0",
     "serverless-offline": "^13.3.3",
     "serverless-plugin-typescript": "^2.1.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "engines": {

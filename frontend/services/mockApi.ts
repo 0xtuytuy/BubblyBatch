@@ -22,7 +22,7 @@ let mockBatches: Batch[] = [
     startTime: getISODate(-24),
     targetHoursStage1: 48,
     photos: [],
-    qrCodeUrl: 'https://kefirproducer.com/b/batch-1',
+    qrCodeUrl: 'https://bubblebatch.com/b/batch-1',
     createdAt: getISODate(-24),
     updatedAt: getISODate(-24),
     notes: 'First batch of the week',
@@ -42,7 +42,7 @@ let mockBatches: Batch[] = [
     startTimeStage2: getISODate(-48),
     targetHoursStage2: 36,
     photos: [],
-    qrCodeUrl: 'https://kefirproducer.com/b/batch-2',
+    qrCodeUrl: 'https://bubblebatch.com/b/batch-2',
     createdAt: getISODate(-96),
     updatedAt: getISODate(-48),
     notes: 'Strong carbonation expected',
@@ -62,7 +62,7 @@ let mockBatches: Batch[] = [
     startTimeStage2: getISODate(-192),
     targetHoursStage2: 48,
     photos: [],
-    qrCodeUrl: 'https://kefirproducer.com/b/batch-3',
+    qrCodeUrl: 'https://bubblebatch.com/b/batch-3',
     createdAt: getISODate(-240),
     updatedAt: getISODate(-144),
     notes: 'Perfect taste, great carbonation',
@@ -148,7 +148,7 @@ export const createBatch = async (batchData: Partial<Batch>): Promise<ApiRespons
     startTime: getISODate(),
     targetHoursStage1: batchData.targetHoursStage1 || 48,
     photos: [],
-    qrCodeUrl: `https://kefirproducer.com/b/${generateId()}`,
+    qrCodeUrl: `https://bubblebatch.com/b/${generateId()}`,
     createdAt: getISODate(),
     updatedAt: getISODate(),
     notes: batchData.notes,
@@ -309,7 +309,7 @@ export const exportBatchesCSV = async (): Promise<ApiResponse<string>> => {
   await delay(500);
   
   // In real implementation, this would trigger backend CSV generation
-  const csvUrl = `https://api.kefirproducer.com/exports/${Date.now()}.csv`;
+  const csvUrl = `https://api.bubblebatch.com/exports/${Date.now()}.csv`;
   
   return {
     success: true,

@@ -126,7 +126,7 @@ The Kefir app uses a serverless architecture on AWS with a managed frontend on V
 
 ### 5. QR Code Scan
 1. User scans QR code
-2. App navigates to `kefirproducer.com/b/:batchId`
+2. App navigates to `bubblebatch.com/b/:batchId`
 3. If app installed: deep link opens batch in app
 4. If app not installed: web page shows public batch view
 5. Public endpoint (no auth) returns batch summary

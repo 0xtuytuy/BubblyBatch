@@ -6,16 +6,18 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: ${opt:region, 'us-east-1'}
-  stage: ${opt:stage, 'dev'}
+  stage: ${opt:stage, 'local'}
   memorySize: 256
   timeout: 30
   environment:
     TABLE_NAME: ${self:custom.tableName}
     BUCKET_NAME: ${self:custom.bucketName}
-    USER_POOL_ID: !Ref CognitoUserPool
-    USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+    USER_POOL_ID: ${env:USER_POOL_ID, 'local-pool'}
+    USER_POOL_CLIENT_ID: ${env:USER_POOL_CLIENT_ID, 'local-client'}
     SCHEDULER_GROUP_NAME: ${self:custom.schedulerGroupName}
     STAGE: ${self:provider.stage}
+    IS_OFFLINE: ${env:IS_OFFLINE, 'false'}
+    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID, '916767170641'}
   iam:
     role:
       statements:
@@ -58,12 +60,19 @@ plugins:
 
 custom:
   tableName: kefir-table-${self:provider.stage}
-  bucketName: kefir-photos-${self:provider.stage}-${aws:accountId}
+  bucketName: kefir-photos-${self:provider.stage}
   schedulerGroupName: kefir-reminders-${self:provider.stage}
+  isOffline: ${env:IS_OFFLINE, 'false'}
   
   serverless-offline:
     httpPort: 3000
     lambdaPort: 3002
+    host: 0.0.0.0  # Allow network access from other devices
+    corsAllowOrigin: '*'
+    corsAllowHeaders: 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-User-Id'
+    corsAllowCredentials: true
+    noAuth: true  # Disable Cognito auth for local development
+    ignoreJWTSignature: true
 
 functions:
   # Batch management functions
@@ -178,25 +187,25 @@ resources:
           ResponseType: DEFAULT_4XX
           RestApiId:
             Ref: HttpApi
-
-  Outputs:
-    ApiUrl:
-      Description: API Gateway endpoint URL
-      Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
     
-    UserPoolId:
-      Description: Cognito User Pool ID
-      Value: !Ref CognitoUserPool
-    
-    UserPoolClientId:
-      Description: Cognito User Pool Client ID
-      Value: !Ref CognitoUserPoolClient
-    
-    TableName:
-      Description: DynamoDB table name
-      Value: !Ref KefirTable
-    
-    BucketName:
-      Description: S3 bucket name
-      Value: !Ref PhotosBucket
+    Outputs:
+      ApiUrl:
+        Description: API Gateway endpoint URL
+        Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+      
+      UserPoolId:
+        Description: Cognito User Pool ID
+        Value: !Ref CognitoUserPool
+      
+      UserPoolClientId:
+        Description: Cognito User Pool Client ID
+        Value: !Ref CognitoUserPoolClient
+      
+      TableName:
+        Description: DynamoDB table name
+        Value: !Ref KefirTable
+      
+      BucketName:
+        Description: S3 bucket name
+        Value: !Ref PhotosBucket
 

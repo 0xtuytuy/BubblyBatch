@@ -55,7 +55,7 @@ export default function Login() {
               <Ionicons name="water" size={40} color="#0ea5e9" />
             </View>
             <Text className="text-3xl font-bold text-gray-900 mb-2">
-              Kefir Producer
+              Bubble Batch
             </Text>
             <Text className="text-base text-gray-600 text-center">
               Track your fermentation batches with ease

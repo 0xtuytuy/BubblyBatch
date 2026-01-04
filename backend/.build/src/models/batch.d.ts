@@ -1,0 +1,183 @@
+import { z } from 'zod';
+export declare const BatchStage: {
+    readonly STAGE1_OPEN: "stage1_open";
+    readonly STAGE2_BOTTLED: "stage2_bottled";
+};
+export declare const BatchStatus: {
+    readonly ACTIVE: "active";
+    readonly IN_FRIDGE: "in_fridge";
+    readonly READY: "ready";
+    readonly ARCHIVED: "archived";
+};
+export declare const BatchSchema: z.ZodObject<{
+    PK: z.ZodString;
+    SK: z.ZodString;
+    GSI1PK: z.ZodString;
+    GSI1SK: z.ZodString;
+    batchId: z.ZodString;
+    userId: z.ZodString;
+    name: z.ZodString;
+    stage: z.ZodEnum<["stage1_open", "stage2_bottled"]>;
+    status: z.ZodEnum<["active", "in_fridge", "ready", "archived"]>;
+    startDate: z.ZodString;
+    targetDuration: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNumber>;
+    sugarType: z.ZodOptional<z.ZodString>;
+    sugarAmount: z.ZodOptional<z.ZodNumber>;
+    notes: z.ZodOptional<z.ZodString>;
+    photoKeys: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    isPublic: z.ZodDefault<z.ZodBoolean>;
+    publicNote: z.ZodOptional<z.ZodString>;
+    createdAt: z.ZodString;
+    updatedAt: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    PK: string;
+    SK: string;
+    name: string;
+    updatedAt: string;
+    userId: string;
+    createdAt: string;
+    GSI1PK: string;
+    GSI1SK: string;
+    batchId: string;
+    stage: "stage1_open" | "stage2_bottled";
+    status: "active" | "in_fridge" | "ready" | "archived";
+    startDate: string;
+    isPublic: boolean;
+    targetDuration?: number | undefined;
+    temperature?: number | undefined;
+    sugarType?: string | undefined;
+    sugarAmount?: number | undefined;
+    notes?: string | undefined;
+    photoKeys?: string[] | undefined;
+    publicNote?: string | undefined;
+}, {
+    PK: string;
+    SK: string;
+    name: string;
+    updatedAt: string;
+    userId: string;
+    createdAt: string;
+    GSI1PK: string;
+    GSI1SK: string;
+    batchId: string;
+    stage: "stage1_open" | "stage2_bottled";
+    status: "active" | "in_fridge" | "ready" | "archived";
+    startDate: string;
+    targetDuration?: number | undefined;
+    temperature?: number | undefined;
+    sugarType?: string | undefined;
+    sugarAmount?: number | undefined;
+    notes?: string | undefined;
+    photoKeys?: string[] | undefined;
+    isPublic?: boolean | undefined;
+    publicNote?: string | undefined;
+}>;
+export type Batch = z.infer<typeof BatchSchema>;
+export declare const CreateBatchSchema: z.ZodEffects<z.ZodObject<{
+    name: z.ZodString;
+    stage: z.ZodEnum<["stage1_open", "stage2_bottled"]>;
+    startDate: z.ZodOptional<z.ZodString>;
+    targetDuration: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNumber>;
+    sugarType: z.ZodOptional<z.ZodString>;
+    sugarAmount: z.ZodOptional<z.ZodNumber>;
+    notes: z.ZodOptional<z.ZodString>;
+    isPublic: z.ZodDefault<z.ZodBoolean>;
+    publicNote: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    stage: "stage1_open" | "stage2_bottled";
+    isPublic: boolean;
+    startDate?: string | undefined;
+    targetDuration?: number | undefined;
+    temperature?: number | undefined;
+    sugarType?: string | undefined;
+    sugarAmount?: number | undefined;
+    notes?: string | undefined;
+    publicNote?: string | undefined;
+}, {
+    name: string;
+    stage: "stage1_open" | "stage2_bottled";
+    startDate?: string | undefined;
+    targetDuration?: number | undefined;
+    temperature?: number | undefined;
+    sugarType?: string | undefined;
+    sugarAmount?: number | undefined;
+    notes?: string | undefined;
+    isPublic?: boolean | undefined;
+    publicNote?: string | undefined;
+}>, {
+    isPublic: boolean;
+    name: string;
+    stage: "stage1_open" | "stage2_bottled";
+    startDate?: string | undefined;
+    targetDuration?: number | undefined;
+    temperature?: number | undefined;
+    sugarType?: string | undefined;
+    sugarAmount?: number | undefined;
+    notes?: string | undefined;
+    publicNote?: string | undefined;
+}, {
+    name: string;
+    stage: "stage1_open" | "stage2_bottled";
+    startDate?: string | undefined;
+    targetDuration?: number | undefined;
+    temperature?: number | undefined;
+    sugarType?: string | undefined;
+    sugarAmount?: number | undefined;
+    notes?: string | undefined;
+    isPublic?: boolean | undefined;
+    publicNote?: string | undefined;
+}>;
+export type CreateBatchInput = z.infer<typeof CreateBatchSchema>;
+export declare const UpdateBatchSchema: z.ZodObject<{
+    name: z.ZodOptional<z.ZodString>;
+    stage: z.ZodOptional<z.ZodEnum<["stage1_open", "stage2_bottled"]>>;
+    status: z.ZodOptional<z.ZodEnum<["active", "in_fridge", "ready", "archived"]>>;
+    targetDuration: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNumber>;
+    sugarType: z.ZodOptional<z.ZodString>;
+    sugarAmount: z.ZodOptional<z.ZodNumber>;
+    notes: z.ZodOptional<z.ZodString>;
+    isPublic: z.ZodOptional<z.ZodBoolean>;
+    publicNote: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    name?: string | undefined;
+    stage?: "stage1_open" | "stage2_bottled" | undefined;
+    status?: "active" | "in_fridge" | "ready" | "archived" | undefined;
+    targetDuration?: number | undefined;
+    temperature?: number | undefined;
+    sugarType?: string | undefined;
+    sugarAmount?: number | undefined;
+    notes?: string | undefined;
+    isPublic?: boolean | undefined;
+    publicNote?: string | undefined;
+}, {
+    name?: string | undefined;
+    stage?: "stage1_open" | "stage2_bottled" | undefined;
+    status?: "active" | "in_fridge" | "ready" | "archived" | undefined;
+    targetDuration?: number | undefined;
+    temperature?: number | undefined;
+    sugarType?: string | undefined;
+    sugarAmount?: number | undefined;
+    notes?: string | undefined;
+    isPublic?: boolean | undefined;
+    publicNote?: string | undefined;
+}>;
+export type UpdateBatchInput = z.infer<typeof UpdateBatchSchema>;
+export declare const BatchFiltersSchema: z.ZodObject<{
+    stage: z.ZodOptional<z.ZodEnum<["stage1_open", "stage2_bottled"]>>;
+    status: z.ZodOptional<z.ZodEnum<["active", "in_fridge", "ready", "archived"]>>;
+    limit: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+}, "strip", z.ZodTypeAny, {
+    stage?: "stage1_open" | "stage2_bottled" | undefined;
+    status?: "active" | "in_fridge" | "ready" | "archived" | undefined;
+    limit?: number | undefined;
+}, {
+    stage?: "stage1_open" | "stage2_bottled" | undefined;
+    status?: "active" | "in_fridge" | "ready" | "archived" | undefined;
+    limit?: number | undefined;
+}>;
+export type BatchFilters = z.infer<typeof BatchFiltersSchema>;
+//# sourceMappingURL=batch.d.ts.map

@@ -1,4 +1,4 @@
-# Kefir Producer App - Frontend
+# Bubble Batch App - Frontend
 
 A cross-platform mobile and web application for managing kefir fermentation batches. Built with Expo, React Native, TypeScript, and NativeWind.
 
@@ -98,7 +98,7 @@ npm install
 Required environment variables:
 ```env
 EXPO_PUBLIC_API_URL=http://localhost:3000/api
-EXPO_PUBLIC_WEB_URL=https://kefirproducer.com
+EXPO_PUBLIC_WEB_URL=https://bubblebatch.com
 EXPO_PUBLIC_USE_MOCK_API=true
 EXPO_PUBLIC_AWS_REGION=us-east-1
 EXPO_PUBLIC_AWS_USER_POOL_ID=us-east-1_XXXXXXX
@@ -239,14 +239,14 @@ The API service (`services/api.ts`) includes:
 ## Deep Linking
 
 The app supports deep linking for QR codes:
-- URL format: `https://kefirproducer.com/b/{batchId}`
-- App scheme: `kefirproducer://b/{batchId}`
+- URL format: `https://bubblebatch.com/b/{batchId}`
+- App scheme: `bubblebatch://b/{batchId}`
 
 Configure in `app.json`:
 ```json
 {
   "expo": {
-    "scheme": "kefirproducer"
+    "scheme": "bubblebatch"
   }
 }
 ```

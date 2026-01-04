@@ -1,9 +1,12 @@
 import { User } from '../types';
 
-const USE_MOCK_AUTH = process.env.EXPO_PUBLIC_USE_MOCK_API === 'true';
+const USE_MOCK_API = process.env.EXPO_PUBLIC_USE_MOCK_API === 'true';
+const USE_LOCAL_BACKEND = process.env.EXPO_PUBLIC_USE_LOCAL_BACKEND === 'true';
+const LOCAL_USER_ID = process.env.EXPO_PUBLIC_LOCAL_USER_ID || 'test-user-1';
 
 // Mock storage for development
 let mockCurrentUser: User | null = null;
+let localBackendUser: User | null = null;
 let mockOTPCode = '123456';
 
 // Helper to simulate delay
@@ -67,6 +70,72 @@ export const mockAuthService = {
   getSession: async (): Promise<string | null> => {
     await delay(100);
     return mockCurrentUser ? `mock-token-${mockCurrentUser.id}` : null;
+  },
+};
+
+// Local Backend Authentication Service (for local development)
+// Uses mock authentication but with predefined test user ID
+export const localAuthService = {
+  signInWithEmail: async (email: string): Promise<{ success: boolean; error?: string }> => {
+    await delay();
+    
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return {
+        success: false,
+        error: 'Invalid email address',
+      };
+    }
+    
+    // Generate random 6-digit OTP for this session
+    mockOTPCode = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log('[LOCAL BACKEND] Mock OTP Code:', mockOTPCode); // For development only
+    
+    return { success: true };
+  },
+  
+  confirmSignIn: async (email: string, code: string): Promise<{ success: boolean; user?: User; error?: string }> => {
+    await delay();
+    
+    if (code !== mockOTPCode) {
+      return {
+        success: false,
+        error: 'Invalid verification code',
+      };
+    }
+    
+    // Create user with the test user ID from environment
+    localBackendUser = {
+      id: LOCAL_USER_ID,
+      email,
+      name: email.split('@')[0],
+      createdAt: new Date().toISOString(),
+    };
+    
+    console.log('[LOCAL BACKEND] Logged in as:', LOCAL_USER_ID);
+    
+    return {
+      success: true,
+      user: localBackendUser,
+    };
+  },
+  
+  getCurrentUser: async (): Promise<User | null> => {
+    await delay(100);
+    return localBackendUser;
+  },
+  
+  signOut: async (): Promise<void> => {
+    await delay(100);
+    localBackendUser = null;
+    console.log('[LOCAL BACKEND] Signed out');
+  },
+  
+  getSession: async (): Promise<string | null> => {
+    await delay(100);
+    // Return the user ID as the session token - this will be used as X-User-Id header
+    return localBackendUser ? LOCAL_USER_ID : null;
   },
 };
 
@@ -142,7 +211,10 @@ export const amplifyAuthService = {
 };
 
 // Export the appropriate service based on environment
-const authService = USE_MOCK_AUTH ? mockAuthService : amplifyAuthService;
+// Priority: Local Backend > Mock API > Amplify (Production)
+const authService = USE_LOCAL_BACKEND 
+  ? localAuthService 
+  : (USE_MOCK_API ? mockAuthService : amplifyAuthService);
 
 export const signInWithEmail = authService.signInWithEmail;
 export const confirmSignIn = authService.confirmSignIn;

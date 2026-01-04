@@ -53,7 +53,10 @@ export const CreateBatchSchema = z.object({
   notes: z.string().max(1000).optional(),
   isPublic: z.boolean().default(false),
   publicNote: z.string().max(500).optional(),
-});
+}).transform((data) => ({
+  ...data,
+  isPublic: data.isPublic ?? false, // Ensure isPublic is always boolean
+}));
 
 export type CreateBatchInput = z.infer<typeof CreateBatchSchema>;
 

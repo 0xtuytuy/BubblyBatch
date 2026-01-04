@@ -27,6 +27,7 @@ function RootLayoutNav() {
     <Stack
       screenOptions={{
         headerShown: false,
+        animation: 'none',
       }}
     />
   );

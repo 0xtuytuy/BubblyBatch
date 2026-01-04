@@ -73,10 +73,10 @@ async function handleListDevices(
  * DELETE /me/devices/:id - Unregister a device
  */
 async function handleUnregisterDevice(
-  event: APIGatewayProxyEventV2,
+  _event: APIGatewayProxyEventV2,
   userId: string
 ): Promise<APIGatewayProxyResultV2> {
-  const deviceId = getPathParam(event, 'id');
+  const deviceId = getPathParam(_event, 'id');
   await userService.unregisterDevice(userId, deviceId);
   return success({ message: 'Device unregistered successfully' });
 }
